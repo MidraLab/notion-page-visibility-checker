@@ -1,0 +1,13 @@
+version: "3"
+services:
+    notion-page-visibility-checker:
+        container_name: notion-page-visibility-checker
+        build: .
+        tty: true
+        environment:
+            - NOTION_API=${NOTION_API}
+            - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+        env_file:
+            - .env
+        volumes:
+            - ./app:/go/src/app
