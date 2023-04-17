@@ -3,71 +3,47 @@ package main
 import (
 	"fmt"
 	"github.com/joho/godotenv"
-	"net/http"
+	"log"
 	"os"
 	"strings"
 )
 
 func main() {
-	notionAPI := NotionAPI{
-		DatabaseID: loadEnv("NOTION_SURVEY_DATABASE_ID"),
-		APIKey:     loadEnv("NOTION_API_KEY"),
-	}
+	apiKey := loadEnv("NOTION_API_KEY")
+	rootPageId := loadEnv("NOTION_ROOT_PAGE_ID")
 
-	urls, titles, err := notionAPI.ReadPageID()
+	notionAPI := NotionAPI{APIKey: apiKey}
+	blockInfos, err := notionAPI.ReadRootPageBlocks(rootPageId)
 	if err != nil {
-		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	validUrls := []string{}
-	validTitles := []string{}
+	filteredBlocks, err := FilterBlocks(blockInfos, &notionAPI)
+	if err != nil {
+		os.Exit(1)
+	}
 
-	for i, url := range urls {
-		newLink := replaceLink(url)
-		isValid, validLink, validTitle, err := checkLink(newLink, titles[i])
+	var content string
 
-		if err != nil {
-			fmt.Println(err)
-			continue
+	//filteredBlocksが空の場合は
+	if len(filteredBlocks) == 0 {
+		content = "公開中の記事はありません"
+	} else {
+		var titlesAndUrls []string
+		for _, block := range filteredBlocks {
+			titlesAndUrls = append(titlesAndUrls, fmt.Sprintf("Title: %s, URL: %s", block.Title, block.URL))
 		}
 
-		if isValid {
-			validUrls = append(validUrls, validLink)
-			validTitles = append(validTitles, validTitle)
-		}
+		content = "公開中の記事:\n" + strings.Join(titlesAndUrls, "\n")
 	}
 
-	fmt.Println(validUrls)
-	fmt.Println(validTitles)
-}
+	dw := NewDiscordWebhook("NotificationPublicArticles", "", content, nil, false)
 
-func replaceLink(link string) string {
-	newLink := strings.Replace(link, "www.notion.so", "midra-lab.notion.site", 1)
-	//fmt.Print(newLink + "\n")
-	return newLink
-}
+	whURL := loadEnv("DISCORD_WEBHOOK_URL")
 
-func checkLink(link string, title string) (bool, string, string, error) {
-	req, err := http.NewRequest("GET", link, nil)
-	if err != nil {
-		return false, "", "", err
+	if err := dw.SendWebhook(whURL); err != nil {
+		log.Fatal(err)
 	}
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return false, "", "", err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode == http.StatusNotFound {
-		return false, "", "", nil
-	}
-
-	if res.StatusCode == http.StatusOK {
-		return true, link, title, nil
-	}
-
-	return false, "", "", fmt.Errorf("unexpected status code: %d", res.StatusCode)
 }
 
 func loadEnv(keyName string) string {
