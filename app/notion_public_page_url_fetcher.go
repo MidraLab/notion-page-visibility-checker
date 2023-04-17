@@ -25,15 +25,22 @@ type notionResponse struct {
 	} `json:"Results"`
 }
 
-type Block struct {
+type block struct {
 	Object string `json:"object"`
 	ID     string `json:"id"`
 	Type   string `json:"type"`
 }
 
-type BlocksResponse struct {
+type blocksResponse struct {
 	Object  string  `json:"object"`
-	Results []Block `json:"results"`
+	Results []block `json:"results"`
+}
+
+type blockInfo struct {
+	Type  string
+	ID    string
+	Title string
+	URL   string
 }
 
 func (n *NotionAPI) ReadPageID(databaseId string) ([]string, []string, error) {
@@ -78,15 +85,8 @@ func (n *NotionAPI) ReadPageID(databaseId string) ([]string, []string, error) {
 	return urls, titles, nil
 }
 
-type BlockInfo struct {
-	Type  string
-	ID    string
-	Title string
-	URL   string
-}
-
-func (n *NotionAPI) ReadRootPageBlocks(rootPageId string) ([]BlockInfo, error) {
-	var blockInfos []BlockInfo
+func (n *NotionAPI) ReadRootPageBlocks(rootPageId string) ([]blockInfo, error) {
+	var blockInfos []blockInfo
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.notion.com/v1/blocks/%s/children", rootPageId), nil)
@@ -112,14 +112,14 @@ func (n *NotionAPI) ReadRootPageBlocks(rootPageId string) ([]BlockInfo, error) {
 		return nil, fmt.Errorf("Error: %s", string(body))
 	}
 
-	var blocksResponse BlocksResponse
+	var blocksResponse blocksResponse
 	err = json.Unmarshal(body, &blocksResponse)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, block := range blocksResponse.Results {
-		blockInfo := BlockInfo{
+		blockInfo := blockInfo{
 			Type: block.Type,
 			ID:   block.ID,
 		}
@@ -180,8 +180,8 @@ func (n *NotionAPI) GetDatabaseTitle(databaseId string) (string, error) {
 	return notionRes.Title[0].Text.Content, nil
 }
 
-func FilterBlocks(blocks []BlockInfo, api *NotionAPI) ([]BlockInfo, error) {
-	var filteredBlocks []BlockInfo
+func FilterBlocks(blocks []blockInfo, api *NotionAPI) ([]blockInfo, error) {
+	var filteredBlocks []blockInfo
 	for _, block := range blocks {
 
 		if block.Type == "child_database" {
@@ -191,7 +191,7 @@ func FilterBlocks(blocks []BlockInfo, api *NotionAPI) ([]BlockInfo, error) {
 			}
 
 			if isValid {
-				filteredBlocks = append(filteredBlocks, BlockInfo{
+				filteredBlocks = append(filteredBlocks, blockInfo{
 					Type:  block.Type,
 					Title: block.Title,
 					URL:   ReplaceLink(block.URL),
@@ -209,7 +209,7 @@ func FilterBlocks(blocks []BlockInfo, api *NotionAPI) ([]BlockInfo, error) {
 					return nil, err
 				}
 				if isValid {
-					filteredBlocks = append(filteredBlocks, BlockInfo{
+					filteredBlocks = append(filteredBlocks, blockInfo{
 						Type:  block.Type,
 						Title: titles[i],
 						URL:   ReplaceLink(url),
@@ -225,7 +225,6 @@ func FilterBlocks(blocks []BlockInfo, api *NotionAPI) ([]BlockInfo, error) {
 
 func ReplaceLink(link string) string {
 	newLink := strings.Replace(link, "www.notion.so", "midra-lab.notion.site", 1)
-	//fmt.Print(newLink + "\n")
 	return newLink
 }
 
