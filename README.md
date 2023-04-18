@@ -19,4 +19,3 @@
 2. set environment variables in github environment secrets
    - `NOTION_TOKEN` : your notion token
    - `DISCORD_WEBHOOK_URL` : your discord webhook url
-   
