@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"strings"
@@ -47,7 +48,11 @@ func main() {
 }
 
 func loadEnv(keyName string) string {
-
+	err := godotenv.Load("../.env")
+	// もし err がnilではないなら、"読み込み出来ませんでした"が出力されます。
+	if err != nil {
+		fmt.Printf("読み込み出来ませんでした: %v", err)
+	}
 	// .envの SAMPLE_MESSAGEを取得して、messageに代入します。
 	message := os.Getenv(keyName)
 
