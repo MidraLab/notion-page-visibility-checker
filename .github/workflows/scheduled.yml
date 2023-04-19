@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      NOTION_API: ${{ secrets.NOTION_API_KEY }}
+      NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
       NOTION_ROOT_PAGE_ID: ${{ secrets.NOTION_ROOT_PAGE_ID }}
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
     steps:
