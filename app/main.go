@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"strings"
@@ -48,7 +47,6 @@ func main() {
 }
 
 func loadEnv(keyName string) string {
-	godotenv.Load(".env")
 
 	// .envの SAMPLE_MESSAGEを取得して、messageに代入します。
 	message := os.Getenv(keyName)
