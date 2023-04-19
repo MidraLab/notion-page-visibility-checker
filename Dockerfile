@@ -17,7 +17,7 @@ RUN go mod init example.com/mtg-notification
 RUN go get github.com/joho/godotenv
 
 # .envファイルのコピー
-COPY .env /go/src/app
+COPY .env /go/src
 
 # ホストのファイルをコンテナの作業ディレクトリに移行
 COPY . /go/src/app

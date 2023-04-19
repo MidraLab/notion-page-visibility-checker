@@ -12,3 +12,4 @@ services:
             - .env
         volumes:
             - ./app:/go/src/app
+            - ./.env:/go/src/.env
