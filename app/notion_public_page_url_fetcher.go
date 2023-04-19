@@ -180,7 +180,7 @@ func (n *NotionAPI) GetDatabaseTitle(databaseId string) (string, error) {
 	return notionRes.Title[0].Text.Content, nil
 }
 
-func FilterBlocks(blocks []blockInfo, api *NotionAPI) ([]blockInfo, error) {
+func (n *NotionAPI) FilterBlocks(blocks []blockInfo) ([]blockInfo, error) {
 	var filteredBlocks []blockInfo
 	for _, block := range blocks {
 
@@ -198,7 +198,7 @@ func FilterBlocks(blocks []blockInfo, api *NotionAPI) ([]blockInfo, error) {
 				})
 			}
 
-			urls, titles, err := api.ReadPageID(block.ID)
+			urls, titles, err := n.ReadPageID(block.ID)
 			if err != nil {
 				return nil, err
 			}
