@@ -16,12 +16,12 @@ func main() {
 	}
 	blockInfos, err := notionAPI.ReadRootPageBlocks(rootPageId)
 	if err != nil {
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	filteredBlocks, err := notionAPI.FilterBlocks(blockInfos)
 	if err != nil {
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	var content string
@@ -48,9 +48,11 @@ func main() {
 }
 
 func loadEnv(keyName string) string {
-
-	godotenv.Load(".env")
-
+	err := godotenv.Load(".env")
+	// もし err がnilではないなら、"読み込み出来ませんでした"が出力されます。
+	if err != nil {
+		fmt.Printf("読み込み出来ませんでした: %v", err)
+	}
 	// .envの SAMPLE_MESSAGEを取得して、messageに代入します。
 	message := os.Getenv(keyName)
 
