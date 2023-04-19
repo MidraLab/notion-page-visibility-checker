@@ -9,16 +9,17 @@ import (
 )
 
 func main() {
-	apiKey := loadEnv("NOTION_API_KEY")
 	rootPageId := loadEnv("NOTION_ROOT_PAGE_ID")
 
-	notionAPI := NotionAPI{APIKey: apiKey}
+	notionAPI := &NotionAPI{
+		APIKey: loadEnv("NOTION_API_KEY"),
+	}
 	blockInfos, err := notionAPI.ReadRootPageBlocks(rootPageId)
 	if err != nil {
 		os.Exit(1)
 	}
 
-	filteredBlocks, err := FilterBlocks(blockInfos, &notionAPI)
+	filteredBlocks, err := notionAPI.FilterBlocks(blockInfos)
 	if err != nil {
 		os.Exit(1)
 	}
