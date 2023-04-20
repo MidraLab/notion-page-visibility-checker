@@ -17,5 +17,6 @@
 # how to use this tool
 1. fork this repository
 2. set environment variables in github environment secrets
-   - `NOTION_TOKEN` : your notion token
+   - `NOTION_API_KEY` : your notion token
+   - `NOTION_ROOT_PAGE_ID` : your notion root page id
    - `DISCORD_WEBHOOK_URL` : your discord webhook url

@@ -5,9 +5,9 @@ services:
         build: .
         tty: true
         environment:
-            - NOTION_API=${NOTION_API}
+            - NOTION_API_KEY=${NOTION_API_KEY}
+            - NOTION_ROOT_PAGE_ID=${NOTION_ROOT_PAGE_ID}
             - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
-        env_file:
-            - .env
         volumes:
             - ./app:/go/src/app
+            - ./.env:/go/src/.env
