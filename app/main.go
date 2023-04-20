@@ -16,12 +16,12 @@ func main() {
 	}
 	blockInfos, err := notionAPI.ReadRootPageBlocks(rootPageId)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("ReadRootPageBlocks error: %v\n", err)
 	}
 
 	filteredBlocks, err := notionAPI.FilterBlocks(blockInfos)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("FilterBlocks error: %v\n", err)
 	}
 
 	var content string
@@ -47,7 +47,8 @@ func main() {
 		dw := NewDiscordWebhook("NotificationPublicArticles", "", contentPart, nil, false)
 
 		if err := dw.SendWebhook(whURL); err != nil {
-			log.Fatal(err)
+			//Discordに送信できなかった場合は、エラーを出力します。
+			log.Printf("SendWebhook error: %v\n", err)
 		}
 	}
 }
