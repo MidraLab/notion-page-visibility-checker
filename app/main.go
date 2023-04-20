@@ -38,13 +38,38 @@ func main() {
 		content = "公開中の記事:\n" + strings.Join(titlesAndUrls, "\n")
 	}
 
-	dw := NewDiscordWebhook("NotificationPublicArticles", "", content, nil, false)
-
 	whURL := loadEnv("DISCORD_WEBHOOK_URL")
 
-	if err := dw.SendWebhook(whURL); err != nil {
-		log.Fatal(err)
+	// Split content into multiple messages if it exceeds 1900 characters
+	contentParts := splitContent(content, 1900)
+
+	for _, contentPart := range contentParts {
+		dw := NewDiscordWebhook("NotificationPublicArticles", "", contentPart, nil, false)
+
+		if err := dw.SendWebhook(whURL); err != nil {
+			log.Fatal(err)
+		}
 	}
+}
+
+func splitContent(content string, maxChars int) []string {
+	var contentParts []string
+	contentLength := len(content)
+
+	if contentLength <= maxChars {
+		return []string{content}
+	}
+
+	// Split content into parts
+	for start := 0; start < contentLength; start += maxChars {
+		end := start + maxChars
+		if end > contentLength {
+			end = contentLength
+		}
+		contentParts = append(contentParts, content[start:end])
+	}
+
+	return contentParts
 }
 
 func loadEnv(keyName string) string {
