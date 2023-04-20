@@ -212,7 +212,7 @@ func (n *NotionAPI) FilterBlocks(blocks []blockInfo) ([]blockInfo, error) {
 					filteredBlocks = append(filteredBlocks, blockInfo{
 						Type:  block.Type,
 						Title: titles[i],
-						URL:   ReplaceLink(url),
+						URL:   url,
 					})
 				}
 			}
