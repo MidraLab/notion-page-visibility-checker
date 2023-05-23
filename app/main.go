@@ -35,7 +35,8 @@ func main() {
 			titlesAndUrls = append(titlesAndUrls, fmt.Sprintf("Title: %s, URL: %s", block.Title, block.URL))
 		}
 
-		content = "公開中の記事:\n" + strings.Join(titlesAndUrls, "\n")
+		mention := "<@&1052152206750662656>"
+		content = mention + "公開中の記事:\n" + strings.Join(titlesAndUrls, "\n")
 	}
 
 	whURL := loadEnv("DISCORD_WEBHOOK_URL")
