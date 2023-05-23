@@ -20,3 +20,9 @@
    - `NOTION_API_KEY` : your notion token
    - `NOTION_ROOT_PAGE_ID` : your notion root page id
    - `DISCORD_WEBHOOK_URL` : your discord webhook url
+3. set admin role id in `app/main.go`
+```go
+		mention := "<@&1052152206750662656>" // admin role id
+		content = mention + "公開中の記事:\n" + strings.Join(titlesAndUrls, "\n")
+	}
+```
