@@ -25,4 +25,4 @@ jobs:
           docker-compose up -d --build
       - name: Run
         run: |
-          docker-compose run notion-page-visibility-checker go run main.go discord_messenger.go notion_public_page_url_fetcher.go
+          docker-compose run notion-page-visibility-checker go run main.go discord_messenger.go notion_public_page_url_fetcher.go notion_util.go
