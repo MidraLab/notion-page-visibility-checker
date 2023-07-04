@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -64,7 +65,12 @@ func (n *NotionAPI) ReadPageID(databaseId string) ([]string, []string, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(res.Body)
 
 	var notionRes notionResponse
 	if err := json.NewDecoder(res.Body).Decode(&notionRes); err != nil {
@@ -72,7 +78,7 @@ func (n *NotionAPI) ReadPageID(databaseId string) ([]string, []string, error) {
 	}
 
 	if len(notionRes.Results) == 0 {
-		return nil, nil, fmt.Errorf("No results")
+		return nil, nil, fmt.Errorf("no results")
 	}
 
 	var urls []string
@@ -109,7 +115,7 @@ func (n *NotionAPI) ReadRootPageBlocks(rootPageId string) ([]blockInfo, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Error: %s", string(body))
+		return nil, fmt.Errorf("error: %s", string(body))
 	}
 
 	var blocksResponse blocksResponse
@@ -125,115 +131,61 @@ func (n *NotionAPI) ReadRootPageBlocks(rootPageId string) ([]blockInfo, error) {
 		}
 
 		if block.Type == "child_database" || block.Type == "child_page" {
-			blockIDWithoutHyphens := strings.ReplaceAll(block.ID, "-", "")
-			blockURL := fmt.Sprintf("https://www.notion.so/%s", blockIDWithoutHyphens)
-			blockInfo.URL = ReplaceLink(blockURL)
-
-			// Get the title for child_database and child_page blocks
-			title, err := n.GetDatabaseTitle(block.ID)
-			if err != nil {
-				return nil, err
+			blockInfo.URL = GenerateCustomDomainNotionURL(block.ID)
+			if block.Type == "child_database" {
+				// Get the title for child_database and child_page blocks
+				title, err := n.GetDatabaseTitle(block.ID)
+				if err != nil {
+					return nil, err
+				}
+				blockInfo.Title = title
 			}
-			blockInfo.Title = title
+			blockInfos = append(blockInfos, blockInfo)
 		}
-
-		blockInfos = append(blockInfos, blockInfo)
 	}
 
 	return blockInfos, nil
 }
 
-func (n *NotionAPI) GetDatabaseTitle(databaseId string) (string, error) {
-	dbUrl := "https://api.notion.com/v1/databases/" + databaseId
-
-	req, err := http.NewRequest("GET", dbUrl, nil)
-	if err != nil {
-		return "", err
-	}
-
-	req.Header.Add("accept", "application/json")
-	req.Header.Add("Authorization", "Bearer "+n.APIKey)
-	req.Header.Add("Notion-Version", "2022-06-28")
-	req.Header.Add("content-type", "application/json")
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer res.Body.Close()
-
-	var notionRes struct {
-		Title []struct {
-			Text struct {
-				Content string `json:"content"`
-			} `json:"text"`
-		} `json:"title"`
-	}
-	if err := json.NewDecoder(res.Body).Decode(&notionRes); err != nil {
-		return "", err
-	}
-
-	if len(notionRes.Title) == 0 {
-		return "", fmt.Errorf("No title found")
-	}
-
-	return notionRes.Title[0].Text.Content, nil
-}
-
-func (n *NotionAPI) FilterBlocks(blocks []blockInfo) ([]blockInfo, error) {
-	var filteredBlocks []blockInfo
+// FilterPublicBlocks CheckLink checks if the link is valid
+func (n *NotionAPI) FilterPublicBlocks(blocks []blockInfo) ([]blockInfo, error) {
+	var publicPagesInfo []blockInfo
 	for _, block := range blocks {
+		isPublicPage, err := CheckLink(ReplaceLink(block.URL))
+		if err != nil {
+			return nil, err
+		}
+
+		if isPublicPage {
+			publicPagesInfo = append(publicPagesInfo, blockInfo{
+				Type:  block.Type,
+				Title: block.Title,
+				URL:   ReplaceLink(block.URL),
+			})
+		}
 
 		if block.Type == "child_database" {
-			isValid, err := CheckLink(ReplaceLink(block.URL))
-			if err != nil {
-				return nil, err
-			}
-
-			if isValid {
-				filteredBlocks = append(filteredBlocks, blockInfo{
-					Type:  block.Type,
-					Title: block.Title,
-					URL:   ReplaceLink(block.URL),
-				})
-			}
-
 			urls, titles, err := n.ReadPageID(block.ID)
 			if err != nil {
 				return nil, err
 			}
 
+			// database内のpageの確認
 			for i, url := range urls {
 				isValid, err := CheckLink(ReplaceLink(url))
 				if err != nil {
 					return nil, err
 				}
 				if isValid {
-					filteredBlocks = append(filteredBlocks, blockInfo{
+					publicPagesInfo = append(publicPagesInfo, blockInfo{
 						Type:  block.Type,
 						Title: titles[i],
 						URL:   url,
 					})
 				}
 			}
-
 		}
 	}
 
-	return filteredBlocks, nil
-}
-
-func ReplaceLink(link string) string {
-	newLink := strings.Replace(link, "www.notion.so", "midra-lab.notion.site", 1)
-	return newLink
-}
-
-func CheckLink(url string) (bool, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return false, nil
-	}
-	defer resp.Body.Close()
-
-	return resp.StatusCode == http.StatusOK, nil
+	return publicPagesInfo, nil
 }

@@ -14,24 +14,24 @@ func main() {
 	notionAPI := &NotionAPI{
 		APIKey: loadEnv("NOTION_API_KEY"),
 	}
-	blockInfos, err := notionAPI.ReadRootPageBlocks(rootPageId)
+	blockInfo, err := notionAPI.ReadRootPageBlocks(rootPageId)
 	if err != nil {
 		log.Printf("ReadRootPageBlocks error: %v\n", err)
 	}
 
-	filteredBlocks, err := notionAPI.FilterBlocks(blockInfos)
+	publicPages, err := notionAPI.FilterPublicBlocks(blockInfo)
 	if err != nil {
-		log.Printf("FilterBlocks error: %v\n", err)
+		log.Printf("FilterPublicBlocks error: %v\n", err)
 	}
 
 	var content string
 
 	//filteredBlocksが空の場合は
-	if len(filteredBlocks) == 0 {
+	if len(publicPages) == 0 {
 		content = "公開中の記事はありません"
 	} else {
 		var titlesAndUrls []string
-		for _, block := range filteredBlocks {
+		for _, block := range publicPages {
 			titlesAndUrls = append(titlesAndUrls, fmt.Sprintf("Title: %s, URL: %s", block.Title, block.URL))
 		}
 
