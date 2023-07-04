@@ -78,7 +78,6 @@ func (dw *DiscordWebhook) SendWebhook(whURL string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 204 {
-		fmt.Println("sent", dw) //成功
 	} else {
 		return fmt.Errorf("%#v\n", resp) //失敗
 	}
